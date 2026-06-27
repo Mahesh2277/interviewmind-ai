@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(uuid())
+  name       String
+  email      String      @unique
+  password   String
+  role       String      @default("CANDIDATE")
+  createdAt  DateTime    @default(now())
+  answers    Answer[]
+  interviews Interview[]
+}
+
+model Interview {
+  id                 String          @id @default(uuid())
+  userId             String
+  targetRole         String
+  difficulty         String
+  skills             String
+  experienceLevel    String
+  projectTitle       String
+  projectDescription String
+  techStack          String
+  status             String          @default("STARTED")
+  overallScore       Float?
+  recommendation     String?
+  createdAt          DateTime        @default(now())
+  answers            Answer[]
+  crossQuestions     CrossQuestion[]
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions          Question[]
+  report             Report?
+}
+
+model Question {
+  id             String          @id @default(uuid())
+  interviewId    String
+  questionText   String
+  questionType   String
+  idealAnswer    String
+  createdAt      DateTime        @default(now())
+  answers        Answer[]
+  crossQuestions CrossQuestion[]
+  interview      Interview       @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
+
+model Answer {
+  id                      String    @id @default(uuid())
+  questionId              String
+  interviewId             String
+  userId                  String
+  answerText              String
+  technicalScore          Float
+  clarityScore            Float
+  completenessScore       Float
+  confidenceScore         Float
+  semanticSimilarityScore Float
+  finalAnswerScore        Float
+  strengths               String
+  weaknesses              String
+  missingPoints           String
+  feedback                String
+  improvedAnswer          String
+  createdAt               DateTime  @default(now())
+  interview               Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  question                Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CrossQuestion {
+  id                String    @id @default(uuid())
+  interviewId       String
+  parentQuestionId  String
+  crossQuestionText String
+  reason            String
+  createdAt         DateTime  @default(now())
+  interview         Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  parentQuestion    Question  @relation(fields: [parentQuestionId], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id                    String    @id @default(uuid())
+  interviewId           String    @unique
+  overallScore          Float
+  technicalAverage      Float
+  clarityAverage        Float
+  completenessAverage   Float
+  confidenceAverage     Float
+  projectKnowledgeScore Float
+  strengths             String
+  weaknesses            String
+  missingSkills         String
+  roadmap               String
+  recommendation        String
+  pdfUrl                String?
+  createdAt             DateTime  @default(now())
+  interview             Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+}
